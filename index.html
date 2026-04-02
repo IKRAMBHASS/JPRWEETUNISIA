@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JP RWEE Tunisie</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Open Sans,sans-serif;font-size:13px;background:#f5f7f5;display:flex;min-height:100vh}
@@ -78,14 +79,20 @@ tr:hover td{background:#f5fbf5}
 .tip{background:#fff3e0;border:1px solid #ffe0b2;border-radius:7px;padding:9px 13px;font-size:11px;color:#e65100;margin-top:12px;line-height:1.5}
 .agc{background:#fff;border-radius:8px;border:1px solid #d0e4d0;overflow:hidden}
 .agh{padding:13px 15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #d0e4d0}
-.agi{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.agi{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
 .agb{padding:13px 15px}
 .agst{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
 .agsi{background:#eef4ee;border-radius:6px;padding:9px;text-align:center}
 .asv{font-size:20px;font-weight:600;line-height:1.1}
 .asl{font-size:9px;color:#5a7060;text-transform:uppercase;font-weight:600;margin-top:2px}
 .tchips{display:flex;gap:5px;flex-wrap:wrap}
-.map-svg{width:100%;border-radius:8px;border:1px solid #d0e4d0;background:#e8f4f8}
+#map{height:500px;border-radius:8px;border:1px solid #d0e4d0}
+.map-legend{display:flex;gap:14px;align-items:center;padding:9px 14px;background:#fff;border-radius:8px;margin-bottom:12px;border:1px solid #d0e4d0;flex-wrap:wrap;font-size:11px}
+.leg-item{display:flex;align-items:center;gap:6px;font-weight:600}
+.leg-dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.map-tabs{display:flex;gap:8px;margin-bottom:12px}
+.map-tab{padding:6px 14px;border-radius:20px;border:1px solid #d0e4d0;background:#fff;color:#1a2e1a;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.map-tab.on{background:#2e8b3a;color:#fff;border-color:#2e8b3a}
 .mo{position:fixed;inset:0;background:rgba(26,92,36,0.22);backdrop-filter:blur(3px);z-index:1000;display:none;align-items:center;justify-content:center}
 .mo.open{display:flex}
 .mbox{background:#fff;border-radius:12px;padding:24px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;border-top:4px solid #2e8b3a;box-shadow:0 16px 60px rgba(0,0,0,0.2)}
@@ -100,6 +107,7 @@ tr:hover td{background:#f5fbf5}
 .mft{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;padding-top:13px;border-top:1px solid #d0e4d0}
 #toast{position:fixed;bottom:22px;right:22px;z-index:9999;padding:11px 18px;border-radius:8px;font-size:12px;font-weight:600;display:none;color:#fff;background:#2e8b3a;box-shadow:0 4px 18px rgba(0,0,0,0.2)}
 #toast.err{background:#c62828}
+.gps-help{background:#e8f5e9;border:1px solid #c8e6c9;border-radius:7px;padding:8px 12px;font-size:11px;color:#1b5e20;margin-top:8px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -161,15 +169,18 @@ tr:hover td{background:#f5fbf5}
     </div>
 
     <div class="pg" id="pg-map">
-      <div class="fb">
-        <select class="fsel" onchange="drawMap(this.value)">
-          <option value="all">Toutes les regions</option>
-          <option value="Jendouba">Jendouba</option>
-          <option value="Kairouan">Kairouan</option>
-        </select>
+      <div class="map-tabs">
+        <button class="map-tab on" id="tab-all" onclick="setMapView('all',this)">Tout afficher</button>
+        <button class="map-tab" id="tab-jen" onclick="setMapView('Jendouba',this)">Jendouba</button>
+        <button class="map-tab" id="tab-kai" onclick="setMapView('Kairouan',this)">Kairouan</button>
       </div>
-      <div id="map-c"></div>
-      <div class="tip">Coordonnees GPS - Jendouba: lat 36.50 lng 8.78 | Kairouan: lat 35.68 lng 10.10</div>
+      <div class="map-legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#1565c0"></span>OPA Jendouba</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#e55b13"></span>OPA Kairouan</span>
+        <span style="margin-left:auto;color:#5a7060">Cliquez un marqueur pour les details</span>
+      </div>
+      <div id="map"></div>
+      <div class="tip">Astuce GPS : cherchez votre OPA sur Google Maps, clic droit sur le lieu et copiez les coordonnees (ex: 36.4974, 8.7757 pour Jendouba ville)</div>
     </div>
 
     <div class="pg" id="pg-op">
@@ -236,7 +247,10 @@ tr:hover td{background:#f5fbf5}
       <div class="fr"><label>Pourcentage Femmes</label><input type="number" id="ff" placeholder="0" min="0" max="100"></div>
       <div class="fr"><label>Latitude GPS</label><input type="number" id="fla" placeholder="36.5023" step="0.0001"></div>
       <div class="fr"><label>Longitude GPS</label><input type="number" id="flo" placeholder="8.7797" step="0.0001"></div>
-      <div class="fr fu"><label>Notes</label><textarea id="fno" placeholder="Informations..."></textarea></div>
+      <div class="fr fu">
+        <div class="gps-help">Comment trouver le GPS : allez sur Google Maps, clic droit sur votre OPA, copiez les coordonnees. Ex: Jendouba ville = 36.4974, 8.7757 | Kairouan ville = 35.6781, 10.0963</div>
+      </div>
+      <div class="fr fu"><label>Notes</label><textarea id="fno" placeholder="Informations complementaires..."></textarea></div>
     </div>
     <div class="mft">
       <button class="btn" onclick="closeMo('mo-op')">Annuler</button>
@@ -266,8 +280,10 @@ tr:hover td{background:#f5fbf5}
 
 <div id="toast"></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 var O=[];var I=[];var eO=null;var eI=null;
+var MAP=null;var MARKERS=[];var MAP_READY=false;var CUR_VIEW="all";
 try{O=JSON.parse(localStorage.getItem("jwee_o")||"[]");}catch(e){O=[];}
 try{I=JSON.parse(localStorage.getItem("jwee_i")||"[]");}catch(e){I=[];}
 function sv(){try{localStorage.setItem("jwee_o",JSON.stringify(O));localStorage.setItem("jwee_i",JSON.stringify(I));}catch(e){}}
@@ -284,7 +300,7 @@ function go(id,btn){
   var ttl=document.getElementById("tb-ttl");
   if(ttl){ttl.textContent=titles[id]||id;}
   if(id==="db"){drawDb();}
-  if(id==="map"){drawMap("all");}
+  if(id==="map"){setTimeout(initMap,100);}
   if(id==="op"){drawOpas("all");}
   if(id==="it"){drawIts();}
   if(id==="ag"){drawAg();}
@@ -293,6 +309,59 @@ function go(id,btn){
 
 function openMo(id){document.getElementById(id).classList.add("open");}
 function closeMo(id){document.getElementById(id).classList.remove("open");eO=null;eI=null;}
+
+function initMap(){
+  if(!MAP_READY){
+    MAP=L.map("map");
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"OpenStreetMap contributors",maxZoom:18}).addTo(MAP);
+    MAP_READY=true;
+  }
+  setMapView(CUR_VIEW,null);
+}
+
+function setMapView(filter,btn){
+  CUR_VIEW=filter;
+  var tabs=document.querySelectorAll(".map-tab");
+  for(var i=0;i<tabs.length;i++){tabs[i].classList.remove("on");}
+  if(btn){btn.classList.add("on");}
+  if(!MAP_READY){return;}
+  for(var i=0;i<MARKERS.length;i++){MAP.removeLayer(MARKERS[i]);}
+  MARKERS=[];
+  var list=[];
+  for(var i=0;i<O.length;i++){
+    if(filter==="all"||O[i].reg===filter){list.push(O[i]);}
+  }
+  var withGPS=[];
+  for(var i=0;i<list.length;i++){if(list[i].lat&&list[i].lng){withGPS.push(list[i]);}}
+  if(withGPS.length===0){
+    if(filter==="Jendouba"){MAP.setView([36.5,8.78],11);}
+    else if(filter==="Kairouan"){MAP.setView([35.68,10.10],11);}
+    else{MAP.setView([36.1,9.5],7);}
+  }
+  for(var i=0;i<withGPS.length;i++){
+    var o=withGPS[i];
+    var col=o.reg==="Jendouba"?"#1565c0":"#e55b13";
+    var ic=0;var b=0;
+    for(var j=0;j<I.length;j++){if(I[j].oid===o.id){ic++;b+=I[j].b||0;}}
+    var icon=L.divIcon({
+      html:"<div style='width:18px;height:18px;border-radius:50%;background:"+col+";border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:700'>"+(ic>0?ic:"")+"</div>",
+      className:"",iconSize:[18,18],iconAnchor:[9,9]
+    });
+    var popup="<div style='font-family:Open Sans,sans-serif;min-width:190px'>"
+      +"<strong style='color:"+col+";font-size:13px'>"+o.nom+"</strong><br>"
+      +"<span style='color:#666;font-size:11px'>"+o.reg+(o.del?" - "+o.del:"")+"</span>"
+      +"<hr style='margin:6px 0;border:none;border-top:1px solid #e8f5e9'>"
+      +"<span style='font-size:11px'>Membres: "+o.mem+" | Femmes: "+o.fem+"%</span><br>"
+      +"<span style='font-size:11px'>Interventions: "+ic+" | Beneficiaires: "+b+"</span>"
+      +"</div>";
+    var m=L.marker([o.lat,o.lng],{icon:icon}).addTo(MAP).bindPopup(popup);
+    MARKERS.push(m);
+  }
+  if(withGPS.length>0){
+    var group=new L.featureGroup(MARKERS);
+    MAP.fitBounds(group.getBounds().pad(0.3));
+  }
+}
 
 function bars(data,cols){
   var max=0;
@@ -316,13 +385,11 @@ function dnut(data,cols){
   svg+="<circle cx='"+cx+"' cy='"+cy+"' r='"+r+"' fill='none' stroke='#eef4ee' stroke-width='18'/>";
   for(var i=0;i<data.length;i++){
     var dash=(data[i].v/tot)*c;
-    var so=c-off;
-    svg+="<circle cx='"+cx+"' cy='"+cy+"' r='"+r+"' fill='none' stroke='"+cols[i]+"' stroke-width='18' stroke-dasharray='"+dash+" "+(c-dash)+"' stroke-dashoffset='"+so+"' style='transform:rotate(-90deg);transform-origin:50% 50%'/>"; 
+    svg+="<circle cx='"+cx+"' cy='"+cy+"' r='"+r+"' fill='none' stroke='"+cols[i]+"' stroke-width='18' stroke-dasharray='"+dash+" "+(c-dash)+"' stroke-dashoffset='"+(c-off)+"' style='transform:rotate(-90deg);transform-origin:50% 50%'/>";
     off+=dash;
   }
   svg+="<text x='"+cx+"' y='"+(cy-4)+"' text-anchor='middle' font-size='17' font-weight='600' fill='#1a5c24'>"+tot+"</text>";
-  svg+="<text x='"+cx+"' y='"+(cy+12)+"' text-anchor='middle' font-size='9' fill='#5a7060'>Total</text>";
-  svg+="</svg>";
+  svg+="<text x='"+cx+"' y='"+(cy+12)+"' text-anchor='middle' font-size='9' fill='#5a7060'>Total</text></svg>";
   var leg="<div class='dlg'>";
   for(var i=0;i<data.length;i++){
     leg+="<div class='di'><div class='dd' style='background:"+cols[i]+"'></div><span style='flex:1'>"+data[i].l+"</span><span style='font-weight:600;color:"+cols[i]+"'>"+data[i].v+"</span></div>";
@@ -371,38 +438,6 @@ function drawDb(){
   }
 }
 
-function drawMap(f){
-  var list=f==="all"?O:[];
-  if(f!=="all"){for(var i=0;i<O.length;i++){if(O[i].reg===f){list.push(O[i]);}}}
-  var gps=[];
-  for(var i=0;i<list.length;i++){if(list[i].lat&&list[i].lng){gps.push(list[i]);}}
-  var tx=function(lng){return((lng-7)/5)*320+40;};
-  var ty=function(lat){return((38-lat)/8)*230+20;};
-  var pins="";
-  for(var i=0;i<gps.length;i++){
-    var o=gps[i];
-    var x=tx(o.lng);var y=ty(o.lat);
-    var col=o.reg==="Jendouba"?"#1565c0":"#e55b13";
-    var ic=0;for(var j=0;j<I.length;j++){if(I[j].oid===o.id){ic++;}}
-    pins+="<circle cx='"+x+"' cy='"+y+"' r='9' fill='"+col+"' stroke='#fff' stroke-width='2'><title>"+o.nom+" ("+o.reg+") - "+ic+" intervention(s)</title></circle>";
-    if(ic){pins+="<text x='"+x+"' y='"+(y+4)+"' text-anchor='middle' font-size='7' fill='#fff' font-weight='600'>"+ic+"</text>";}
-  }
-  var emp="";
-  if(!gps.length){emp="<text x='200' y='130' text-anchor='middle' font-size='11' fill='#5a7060'>Aucune OPA avec coordonnees GPS</text>";}
-  var svg="<svg class='map-svg' viewBox='0 0 400 280'>";
-  svg+="<path d='M170,15 L215,22 L235,38 L248,58 L242,80 L258,102 L263,132 L252,162 L238,192 L218,222 L198,258 L184,270 L168,258 L152,226 L142,196 L138,166 L143,136 L154,106 L159,76 L163,46 Z' fill='#c8e6c9' stroke='#2e8b3a' stroke-width='1.2' opacity='0.7'/>";
-  svg+="<text x='168' y='76' font-size='9' fill='#1a5c24' font-weight='600'>Jendouba</text>";
-  svg+="<text x='168' y='152' font-size='9' fill='#e55b13' font-weight='600'>Kairouan</text>";
-  svg+=pins+emp+"</svg>";
-  svg+="<div style='display:flex;gap:14px;margin-top:9px;font-size:11px'>";
-  svg+="<span style='color:#0c447c;font-weight:600'>Jendouba</span>";
-  svg+="<span style='color:#993c1d;font-weight:600'>Kairouan</span>";
-  svg+="<span style='margin-left:auto;color:#5a7060'>"+gps.length+"/"+list.length+" OPA localisee(s)</span>";
-  svg+="</div>";
-  var mc=document.getElementById("map-c");
-  if(mc){mc.innerHTML=svg;}
-}
-
 function opaModal(o){
   eO=o?o.id:null;
   document.getElementById("op-ttl").textContent=o?"Modifier OPA":"Nouvelle OPA";
@@ -422,49 +457,35 @@ function saveOpa(){
   var nom=document.getElementById("fn").value.trim();
   var reg=document.getElementById("frg").value;
   if(!nom||!reg){toast("Nom et region obligatoires",true);return;}
-  var o={
-    id:eO||String(Date.now()),
-    nom:nom,reg:reg,
+  var o={id:eO||String(Date.now()),nom:nom,reg:reg,
     del:document.getElementById("fd").value.trim(),
     typ:document.getElementById("ft").value,
     mem:parseInt(document.getElementById("fm").value)||0,
     fem:parseInt(document.getElementById("ff").value)||0,
     lat:parseFloat(document.getElementById("fla").value)||null,
     lng:parseFloat(document.getElementById("flo").value)||null,
-    notes:document.getElementById("fno").value.trim()
-  };
-  if(eO){
-    for(var i=0;i<O.length;i++){if(O[i].id===eO){O[i]=o;break;}}
-    toast("OPA mise a jour");
-  }else{
-    O.push(o);
-    toast("OPA ajoutee");
-  }
-  sv();
-  closeMo("mo-op");
+    notes:document.getElementById("fno").value.trim()};
+  if(eO){for(var i=0;i<O.length;i++){if(O[i].id===eO){O[i]=o;break;}}toast("OPA mise a jour");}
+  else{O.push(o);toast("OPA ajoutee");}
+  sv();closeMo("mo-op");
   var flt=document.getElementById("op-flt");
-  drawOpas(flt?flt.value:"all");
-  drawDb();
+  drawOpas(flt?flt.value:"all");drawDb();
+  if(MAP_READY){setMapView(CUR_VIEW,null);}
 }
 
 function delOpa(id){
   if(!confirm("Supprimer cette OPA?")){return;}
-  var newO=[];for(var i=0;i<O.length;i++){if(O[i].id!==id){newO.push(O[i]);}}
-  O=newO;
-  var newI=[];for(var i=0;i<I.length;i++){if(I[i].oid!==id){newI.push(I[i]);}}
-  I=newI;
-  sv();
-  var flt=document.getElementById("op-flt");
-  drawOpas(flt?flt.value:"all");
-  drawDb();
-  toast("OPA supprimee");
+  var newO=[];for(var i=0;i<O.length;i++){if(O[i].id!==id){newO.push(O[i]);}}O=newO;
+  var newI=[];for(var i=0;i<I.length;i++){if(I[i].oid!==id){newI.push(I[i]);}}I=newI;
+  sv();var flt=document.getElementById("op-flt");
+  drawOpas(flt?flt.value:"all");drawDb();toast("OPA supprimee");
+  if(MAP_READY){setMapView(CUR_VIEW,null);}
 }
 
 function drawOpas(f){
   var list=f==="all"?O:[];
   if(f!=="all"){for(var i=0;i<O.length;i++){if(O[i].reg===f){list.push(O[i]);}}}
-  var tb=document.getElementById("op-tb");
-  if(!tb){return;}
+  var tb=document.getElementById("op-tb");if(!tb){return;}
   if(!list.length){tb.innerHTML="<tr><td colspan='8'><div class='em'>Aucune OPA - Cliquez Nouvelle OPA</div></td></tr>";return;}
   var html="";
   for(var i=0;i<list.length;i++){
@@ -510,38 +531,21 @@ function saveIt(){
   var ag=document.getElementById("ia").value;
   var typ=document.getElementById("ity").value;
   if(!oid||!ag||!typ){toast("OPA, agence et type obligatoires",true);return;}
-  var op=null;
-  for(var i=0;i<O.length;i++){if(O[i].id===oid){op=O[i];break;}}
-  var it={
-    id:eI||String(Date.now()),
-    oid:oid,
-    onom:op?op.nom:"",
-    ag:ag,typ:typ,
-    reg:op?op.reg:"",
-    dt:document.getElementById("idt").value,
+  var op=null;for(var i=0;i<O.length;i++){if(O[i].id===oid){op=O[i];break;}}
+  var it={id:eI||String(Date.now()),oid:oid,onom:op?op.nom:"",ag:ag,typ:typ,
+    reg:op?op.reg:"",dt:document.getElementById("idt").value,
     b:parseInt(document.getElementById("ib").value)||0,
     st:document.getElementById("ist").value,
-    desc:document.getElementById("idc").value.trim()
-  };
-  if(eI){
-    for(var i=0;i<I.length;i++){if(I[i].id===eI){I[i]=it;break;}}
-    toast("Intervention mise a jour");
-  }else{
-    I.push(it);
-    toast("Intervention ajoutee");
-  }
-  sv();
-  closeMo("mo-it");
-  drawIts();
-  drawDb();
+    desc:document.getElementById("idc").value.trim()};
+  if(eI){for(var i=0;i<I.length;i++){if(I[i].id===eI){I[i]=it;break;}}toast("Intervention mise a jour");}
+  else{I.push(it);toast("Intervention ajoutee");}
+  sv();closeMo("mo-it");drawIts();drawDb();
 }
 
 function delIt(id){
-  if(!confirm("Supprimer cette intervention?")){return;}
-  var newI=[];for(var i=0;i<I.length;i++){if(I[i].id!==id){newI.push(I[i]);}}
-  I=newI;
-  sv();drawIts();drawDb();
-  toast("Intervention supprimee");
+  if(!confirm("Supprimer?")){return;}
+  var newI=[];for(var i=0;i<I.length;i++){if(I[i].id!==id){newI.push(I[i]);}}I=newI;
+  sv();drawIts();drawDb();toast("Intervention supprimee");
 }
 
 function drawIts(){
@@ -554,8 +558,7 @@ function drawIts(){
     var it=I[i];
     if((fav==="all"||it.ag===fav)&&(frv==="all"||it.reg===frv)){list.push(it);}
   }
-  var tb=document.getElementById("it-tb");
-  if(!tb){return;}
+  var tb=document.getElementById("it-tb");if(!tb){return;}
   if(!list.length){tb.innerHTML="<tr><td colspan='8'><div class='em'>Aucune intervention</div></td></tr>";return;}
   var html="";
   for(var i=0;i<list.length;i++){
@@ -581,37 +584,21 @@ function drawIts(){
 }
 
 function drawAg(){
-  var AGs=[
-    {n:"FAO",c:"#0c447c",bg:"#e3f2fd"},
-    {n:"IFAD",c:"#27500a",bg:"#e8f5e9"},
-    {n:"UN Women",c:"#4b1528",bg:"#fce4ec"},
-    {n:"WFP",c:"#412402",bg:"#fff8e1"}
-  ];
-  var g=document.getElementById("ag-grid");
-  if(!g){return;}
+  var AGs=[{n:"FAO",c:"#0c447c",bg:"#e3f2fd"},{n:"IFAD",c:"#27500a",bg:"#e8f5e9"},{n:"UN Women",c:"#4b1528",bg:"#fce4ec"},{n:"WFP",c:"#412402",bg:"#fff8e1"}];
+  var g=document.getElementById("ag-grid");if(!g){return;}
   var html="";
   for(var i=0;i<AGs.length;i++){
-    var ag=AGs[i];
-    var ai=[];var ben=0;var jI=0;var kI=0;var ops={};
-    for(var j=0;j<I.length;j++){
-      if(I[j].ag===ag.n){
-        ai.push(I[j]);ben+=I[j].b||0;
-        if(I[j].reg==="Jendouba"){jI++;}else{kI++;}
-        ops[I[j].oid]=1;
-      }
-    }
+    var ag=AGs[i];var ai=[];var ben=0;var jI=0;var kI=0;var ops={};
+    for(var j=0;j<I.length;j++){if(I[j].ag===ag.n){ai.push(I[j]);ben+=I[j].b||0;if(I[j].reg==="Jendouba"){jI++;}else{kI++;}ops[I[j].oid]=1;}}
     var oc=Object.keys(ops).length;
-    html+="<div class='agc'>";
-    html+="<div class='agh' style='background:"+ag.bg+"'>";
-    html+="<div class='agi'>"+ag.n[0]+"</div>";
+    html+="<div class='agc'><div class='agh' style='background:"+ag.bg+"'>";
+    html+="<div class='agi' style='background:rgba(255,255,255,0.7);color:"+ag.c+"'>"+ag.n[0]+"</div>";
     html+="<div><div style='font-weight:600;color:"+ag.c+";font-size:13px'>"+ag.n+"</div>";
     html+="<div style='font-size:10px;color:#5a7060'>"+ai.length+" intervention(s)</div></div></div>";
-    html+="<div class='agb'>";
-    html+="<div class='agst'>";
+    html+="<div class='agb'><div class='agst'>";
     html+="<div class='agsi'><div class='asv' style='color:"+ag.c+"'>"+ai.length+"</div><div class='asl'>Interventions</div></div>";
     html+="<div class='agsi'><div class='asv' style='color:"+ag.c+"'>"+ben+"</div><div class='asl'>Beneficiaires</div></div>";
-    html+="</div>";
-    html+="<div class='tchips'>";
+    html+="</div><div class='tchips'>";
     html+="<span class='ck cin'>Jendouba: "+jI+"</span>";
     html+="<span class='ck cwa'>Kairouan: "+kI+"</span>";
     html+="<span class='ck cok'>"+oc+" OPA</span>";
@@ -623,8 +610,7 @@ function drawAg(){
 function drawSt(){
   var types={};
   for(var i=0;i<I.length;i++){types[I[i].typ]=(types[I[i].typ]||0)+1;}
-  var tdat=[];
-  var keys=Object.keys(types);
+  var tdat=[];var keys=Object.keys(types);
   for(var i=0;i<keys.length;i++){tdat.push({l:keys[i],v:types[keys[i]]});}
   var ct=document.getElementById("ch-typ");
   if(ct){ct.innerHTML=tdat.length?bars(tdat,["#1565c0","#2e8b3a","#880e4f","#e65100","#6a1b9a","#00838f","#f57c00","#4e342e"]):"<div class='em'>Aucune donnee</div>";}
@@ -632,15 +618,10 @@ function drawSt(){
   for(var i=0;i<I.length;i++){if(I[i].reg==="Jendouba"){jB+=I[i].b||0;}else{kB+=I[i].b||0;}}
   var cb=document.getElementById("ch-breg");
   if(cb){cb.innerHTML=bars([{l:"Jendouba",v:jB},{l:"Kairouan",v:kB}],["#1565c0","#e55b13"]);}
-  var cov=document.getElementById("opa-cov");
-  if(!cov){return;}
+  var cov=document.getElementById("opa-cov");if(!cov){return;}
   if(!O.length){cov.innerHTML="<div class='em'>Aucune OPA</div>";return;}
   var maxB=0;
-  for(var i=0;i<O.length;i++){
-    var b=0;
-    for(var j=0;j<I.length;j++){if(I[j].oid===O[i].id){b+=I[j].b||0;}}
-    if(b>maxB){maxB=b;}
-  }
+  for(var i=0;i<O.length;i++){var b=0;for(var j=0;j<I.length;j++){if(I[j].oid===O[i].id){b+=I[j].b||0;}}if(b>maxB){maxB=b;}}
   if(!maxB){maxB=1;}
   var html="";
   for(var i=0;i<O.length;i++){
@@ -659,19 +640,12 @@ function drawSt(){
 }
 
 function toast(msg,err){
-  var t=document.getElementById("toast");
-  if(!t){return;}
-  t.textContent=msg;
-  t.className=err?"err":"";
-  t.style.display="block";
+  var t=document.getElementById("toast");if(!t){return;}
+  t.textContent=msg;t.className=err?"err":"";t.style.display="block";
   setTimeout(function(){t.style.display="none";},3000);
 }
 
-drawDb();
-drawOpas("all");
-drawIts();
-drawAg();
-drawSt();
+drawDb();drawOpas("all");drawIts();drawAg();drawSt();
 </script>
 </body>
 </html>
