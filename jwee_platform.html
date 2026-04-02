@@ -1,0 +1,536 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:13px;background:var(--color-background-tertiary)}
+.app{display:flex;min-height:600px;border-radius:12px;overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+.sidebar{width:210px;background:#1a5c24;display:flex;flex-direction:column;flex-shrink:0}
+.sb-top{padding:10px 12px;background:#2e8b3a;border-bottom:3px solid #e55b13}
+.sb-top .t1{color:#fff;font-size:12px;font-weight:500}
+.sb-top .t2{color:rgba(255,255,255,0.55);font-size:10px;margin-top:2px;text-transform:uppercase}
+.nav{flex:1;padding:6px 0}
+.nav-lbl{padding:8px 12px 2px;font-size:9px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;font-weight:500}
+.nav-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;width:100%;border:none;background:transparent;border-left:3px solid transparent;color:rgba(255,255,255,0.7);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;text-align:left}
+.nav-btn:hover{background:rgba(255,255,255,0.08);color:#fff}
+.nav-btn.active{background:rgba(229,91,19,0.2);color:#fff;border-left-color:#e55b13}
+.sb-foot{padding:8px 12px;border-top:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.15)}
+.pills{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px}
+.pill{font-size:9px;padding:1px 6px;border-radius:10px;font-weight:500;color:#fff}
+.sb-ver{font-size:9px;color:rgba(255,255,255,0.3)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--color-background-tertiary)}
+.topbar{background:var(--color-background-primary);border-bottom:3px solid #2e8b3a;padding:0 18px;height:46px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.badges{display:flex;gap:6px}
+.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500}
+.content{flex:1;padding:18px;overflow-y:auto}
+.page{display:none}.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:var(--color-background-primary);border-radius:8px;padding:12px 14px;border:0.5px solid var(--color-border-tertiary);border-top:3px solid #2e8b3a}
+.kpi.or{border-top-color:#e55b13}.kpi.bl{border-top-color:#1565c0}.kpi.pu{border-top-color:#7b1fa2}
+.kpi-lbl{font-size:10px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;margin-bottom:2px}
+.kpi-val{font-size:22px;font-weight:500;color:#1a5c24;line-height:1}
+.kpi.or .kpi-val{color:#e55b13}.kpi.bl .kpi-val{color:#1565c0}.kpi.pu .kpi-val{color:#7b1fa2}
+.kpi-sub{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.panel{background:var(--color-background-primary);border-radius:8px;border:0.5px solid var(--color-border-tertiary);overflow:hidden;margin-bottom:14px}
+.panel-head{padding:9px 14px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;background:var(--color-background-secondary)}
+.panel-head h3{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.panel-body{padding:14px}
+.panel-body.np{padding:0}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:var(--color-background-secondary);color:var(--color-text-secondary);font-weight:500;padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;border-bottom:0.5px solid var(--color-border-tertiary)}
+td{padding:7px 10px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary)}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:500}
+.tag-j{background:#e3f0ff;color:#1565c0}.tag-k{background:#fff3ee;color:#e55b13}
+.chip{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:500}
+.chip-ok{background:#e8f5e9;color:#1b5e20}.chip-wa{background:#fff8e1;color:#e65100}.chip-in{background:#e3f2fd;color:#0d47a1}
+.btn{padding:6px 12px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit;font-size:11px;font-weight:500;cursor:pointer}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-g{background:#2e8b3a;color:#fff;border-color:#2e8b3a}.btn-g:hover{background:#1a5c24}
+.btn-o{background:#e55b13;color:#fff;border-color:#e55b13}.btn-o:hover{background:#c04a0a}
+.btn-r{background:#fdecea;color:#c62828;border-color:#ffcdd2}.btn-r:hover{background:#ffcdd2}
+.btn-sm{padding:3px 8px;font-size:10px}
+.fbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+select,input,textarea{padding:6px 9px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit;font-size:12px;outline:none;width:100%}
+select:focus,input:focus,textarea:focus{border-color:#2e8b3a}
+textarea{resize:vertical;min-height:60px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-row{display:flex;flex-direction:column;gap:3px}
+.form-row.full{grid-column:1/-1}
+label{font-size:11px;font-weight:500;color:var(--color-text-secondary)}
+.modal-overlay{position:absolute;inset:0;background:rgba(26,92,36,0.2);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(2px);display:none}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--color-background-primary);border-radius:12px;padding:22px;width:500px;max-width:95%;max-height:85%;overflow-y:auto;border-top:4px solid #2e8b3a;border:0.5px solid var(--color-border-tertiary)}
+.modal-box.or{border-top-color:#e55b13}
+.modal-box h3{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:14px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary)}
+.progress{background:#e8f5e9;border-radius:4px;height:6px}
+.progress-bar{height:100%;border-radius:4px;background:#2e8b3a;transition:width 0.4s}
+.toast{position:absolute;bottom:16px;right:16px;z-index:200;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:500;display:none;color:#fff;background:#2e8b3a}
+.toast.err{background:#c62828}
+.empty{text-align:center;padding:32px 16px;color:var(--color-text-secondary);font-size:12px}
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:130px;padding:0 4px}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.chart-bar-val{font-size:10px;font-weight:500;color:var(--color-text-secondary)}
+.chart-bar-track{width:100%;background:var(--color-background-secondary);border-radius:4px;flex:1;display:flex;align-items:flex-end}
+.chart-bar-fill{width:100%;border-radius:4px;transition:height 0.5s;min-height:3px}
+.chart-bar-lbl{font-size:9px;color:var(--color-text-secondary);text-align:center;line-height:1.2}
+.donut-wrap{display:flex;align-items:center;gap:12px}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:6px}
+.donut-leg-item{display:flex;align-items:center;gap:6px;font-size:11px}
+.donut-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.map-svg{width:100%;border-radius:8px;border:0.5px solid var(--color-border-tertiary);background:#e8f4f8}
+.ag-card{background:var(--color-background-primary);border-radius:8px;border:0.5px solid var(--color-border-tertiary);overflow:hidden}
+.ag-head{padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.ag-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ag-body{padding:12px 14px}
+.ag-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.ag-stat{background:var(--color-background-secondary);border-radius:6px;padding:8px;text-align:center}
+.ag-stat-val{font-size:18px;font-weight:500}
+.ag-stat-lbl{font-size:9px;color:var(--color-text-secondary);text-transform:uppercase;font-weight:500}
+.info-tip{background:#fff3e0;border:0.5px solid #ffe0b2;border-radius:6px;padding:8px 12px;font-size:11px;color:#e65100;margin-top:10px}
+</style>
+
+<div style="position:relative">
+<div class="app">
+  <div class="sidebar">
+    <div class="sb-top">
+      <div class="t1">JP RWEE — Plateforme</div>
+      <div class="t2">🇹🇳 Jendouba & Kairouan</div>
+    </div>
+    <div class="nav">
+      <div class="nav-lbl">Navigation</div>
+      <button class="nav-btn active" onclick="showPage('dashboard',this)">📊 Tableau de bord</button>
+      <button class="nav-btn" onclick="showPage('map',this)">🗺 Carte des OPA</button>
+      <button class="nav-btn" onclick="showPage('opas',this)">🌾 Gestion des OPA</button>
+      <button class="nav-btn" onclick="showPage('interventions',this)">📋 Interventions</button>
+      <button class="nav-btn" onclick="showPage('agencies',this)">🏛 Agences</button>
+      <button class="nav-btn" onclick="showPage('stats',this)">📈 Statistiques</button>
+    </div>
+    <div class="sb-foot">
+      <div class="pills">
+        <span class="pill" style="background:#1565c0">FAO</span>
+        <span class="pill" style="background:#2e7d32">IFAD</span>
+        <span class="pill" style="background:#880e4f">UNW</span>
+        <span class="pill" style="background:#e65100">WFP</span>
+      </div>
+      <div class="sb-ver">Tunisie v1.0 · PMU Tunisie</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Tableau de bord</div>
+      <div class="badges">
+        <span class="badge" style="background:#e3f0ff;color:#1565c0">● Jendouba</span>
+        <span class="badge" style="background:#fff3ee;color:#e55b13">● Kairouan</span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-lbl">Total OPA</div><div class="kpi-val" id="kpi-opa">0</div><div class="kpi-sub">Jendouba & Kairouan</div></div>
+          <div class="kpi or"><div class="kpi-lbl">Interventions</div><div class="kpi-val" id="kpi-int">0</div><div class="kpi-sub">Toutes agences</div></div>
+          <div class="kpi bl"><div class="kpi-lbl">Beneficiaires</div><div class="kpi-val" id="kpi-ben">0</div><div class="kpi-sub">Femmes rurales</div></div>
+          <div class="kpi pu"><div class="kpi-lbl">Agences</div><div class="kpi-val">4</div><div class="kpi-sub">FAO IFAD UNW WFP</div></div>
+        </div>
+        <div class="g2">
+          <div class="panel">
+            <div class="panel-head"><h3>OPA par region</h3></div>
+            <div class="panel-body" id="chart-region"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Interventions par agence</h3></div>
+            <div class="panel-body" id="chart-agency"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Dernieres OPA</h3><button class="btn btn-sm btn-g" onclick="showPage('opas',null)">Voir tout</button></div>
+          <div class="panel-body np">
+            <table><thead><tr><th>OPA</th><th>Region</th><th>Delegation</th><th>Interventions</th><th>Beneficiaires</th></tr></thead>
+            <tbody id="recent-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARTE -->
+      <div class="page" id="page-map">
+        <div class="fbar">
+          <select style="width:auto" onchange="renderMap(this.value)">
+            <option value="all">Toutes les regions</option>
+            <option value="Jendouba">Jendouba</option>
+            <option value="Kairouan">Kairouan</option>
+          </select>
+        </div>
+        <div id="map-container"></div>
+        <div class="info-tip">💡 Ajoutez des coordonnees GPS lors de la saisie OPA pour localiser sur la carte. Ex: Jendouba ≈ lat 36.50, lng 8.78 — Kairouan ≈ lat 35.68, lng 10.10</div>
+      </div>
+
+      <!-- OPA -->
+      <div class="page" id="page-opas">
+        <div class="fbar">
+          <button class="btn btn-g" onclick="openOpaModal()">+ Nouvelle OPA</button>
+          <select style="width:auto" onchange="renderOpaTable(this.value)">
+            <option value="all">Toutes les regions</option>
+            <option value="Jendouba">Jendouba</option>
+            <option value="Kairouan">Kairouan</option>
+          </select>
+        </div>
+        <div class="panel">
+          <div class="panel-body np">
+            <table><thead><tr><th>Nom OPA</th><th>Region</th><th>Delegation</th><th>Type</th><th>Membres</th><th>% Femmes</th><th>GPS</th><th>Actions</th></tr></thead>
+            <tbody id="opa-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERVENTIONS -->
+      <div class="page" id="page-interventions">
+        <div class="fbar">
+          <button class="btn btn-o" onclick="openIntModal()">+ Nouvelle intervention</button>
+          <select style="width:auto" id="int-fa" onchange="renderIntTable()">
+            <option value="all">Toutes les agences</option>
+            <option value="FAO">FAO</option><option value="IFAD">IFAD</option>
+            <option value="UN Women">UN Women</option><option value="WFP">WFP</option>
+          </select>
+          <select style="width:auto" id="int-fr" onchange="renderIntTable()">
+            <option value="all">Toutes les regions</option>
+            <option value="Jendouba">Jendouba</option><option value="Kairouan">Kairouan</option>
+          </select>
+        </div>
+        <div class="panel">
+          <div class="panel-body np">
+            <table><thead><tr><th>OPA</th><th>Region</th><th>Agence</th><th>Type</th><th>Date</th><th>Benef.</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="int-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENCES -->
+      <div class="page" id="page-agencies">
+        <div class="g2" id="agencies-grid"></div>
+      </div>
+
+      <!-- STATS -->
+      <div class="page" id="page-stats">
+        <div class="g2">
+          <div class="panel">
+            <div class="panel-head"><h3>Interventions par type</h3></div>
+            <div class="panel-body" id="chart-types"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Beneficiaires par region</h3></div>
+            <div class="panel-body" id="chart-ben-region"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Couverture par OPA</h3></div>
+          <div class="panel-body" id="opa-bars"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OPA -->
+<div class="modal-overlay" id="modal-opa" onclick="if(event.target===this)closeModal('modal-opa')">
+  <div class="modal-box">
+    <h3 id="opa-modal-title">Nouvelle OPA</h3>
+    <div class="form-grid">
+      <div class="form-row full"><label>Nom de l'OPA *</label><input type="text" id="f-nom" placeholder="ex: GDA Femmes de Bou Salem"></div>
+      <div class="form-row"><label>Region *</label>
+        <select id="f-region"><option value="">-- Choisir --</option><option>Jendouba</option><option>Kairouan</option></select>
+      </div>
+      <div class="form-row"><label>Delegation</label><input type="text" id="f-deleg" placeholder="ex: Jendouba Nord"></div>
+      <div class="form-row"><label>Type</label>
+        <select id="f-type"><option value="">-- Choisir --</option><option>GDA</option><option>SMSA</option><option>Association</option><option>Cooperative</option><option>Autre</option></select>
+      </div>
+      <div class="form-row"><label>Membres</label><input type="number" id="f-memb" placeholder="0"></div>
+      <div class="form-row"><label>% Femmes</label><input type="number" id="f-fem" placeholder="0" min="0" max="100"></div>
+      <div class="form-row"><label>Latitude GPS</label><input type="number" id="f-lat" placeholder="ex: 36.5023" step="0.0001"></div>
+      <div class="form-row"><label>Longitude GPS</label><input type="number" id="f-lng" placeholder="ex: 8.7797" step="0.0001"></div>
+      <div class="form-row full"><label>Notes</label><textarea id="f-notes" placeholder="Informations..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('modal-opa')">Annuler</button>
+      <button class="btn btn-g" onclick="saveOPA()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INTERVENTION -->
+<div class="modal-overlay" id="modal-int" onclick="if(event.target===this)closeModal('modal-int')">
+  <div class="modal-box or">
+    <h3 id="int-modal-title">Nouvelle intervention</h3>
+    <div class="form-grid">
+      <div class="form-row full"><label>OPA *</label><select id="i-opa"><option value="">-- Choisir --</option></select></div>
+      <div class="form-row"><label>Agence *</label>
+        <select id="i-ag"><option value="">-- Choisir --</option><option>FAO</option><option>IFAD</option><option>UN Women</option><option>WFP</option></select>
+      </div>
+      <div class="form-row"><label>Type *</label>
+        <select id="i-type"><option value="">-- Choisir --</option><option>Formation</option><option>Appui technique</option><option>Subvention / Intrants</option><option>Renforcement capacites</option><option>Acces au credit</option><option>Mise en marche</option><option>Infrastructure</option><option>Nutrition</option><option>Autre</option></select>
+      </div>
+      <div class="form-row"><label>Date</label><input type="date" id="i-date"></div>
+      <div class="form-row"><label>Beneficiaires</label><input type="number" id="i-ben" placeholder="0"></div>
+      <div class="form-row"><label>Statut</label>
+        <select id="i-stat"><option>En cours</option><option>Terminee</option><option>Planifiee</option></select>
+      </div>
+      <div class="form-row full"><label>Description</label><textarea id="i-desc" placeholder="Details..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('modal-int')">Annuler</button>
+      <button class="btn btn-o" onclick="saveInt()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+var opas = [], ints = [], editOpaId = null, editIntId = null;
+try { opas = JSON.parse(localStorage.getItem("jwee_opas")||"[]"); } catch(e){}
+try { ints = JSON.parse(localStorage.getItem("jwee_ints")||"[]"); } catch(e){}
+
+function sv() {
+  try { localStorage.setItem("jwee_opas",JSON.stringify(opas)); localStorage.setItem("jwee_ints",JSON.stringify(ints)); } catch(e){}
+}
+
+var PAGE_TITLES = {"dashboard":"Tableau de bord","map":"Carte des OPA","opas":"Gestion des OPA","interventions":"Interventions","agencies":"Agences","stats":"Statistiques"};
+
+function showPage(id, btn) {
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+  document.querySelectorAll(".nav-btn").forEach(function(b){b.classList.remove("active");});
+  var pg = document.getElementById("page-"+id);
+  if(pg) pg.classList.add("active");
+  if(btn) btn.classList.add("active");
+  var tt = document.getElementById("page-title");
+  if(tt) tt.textContent = PAGE_TITLES[id]||"";
+  if(id==="dashboard") renderDashboard();
+  if(id==="map") renderMap("all");
+  if(id==="opas") renderOpaTable("all");
+  if(id==="interventions") renderIntTable();
+  if(id==="agencies") renderAgencies();
+  if(id==="stats") renderStats();
+}
+
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); editOpaId=null; editIntId=null; }
+
+function openOpaModal(opa) {
+  editOpaId = opa ? opa.id : null;
+  document.getElementById("opa-modal-title").textContent = opa ? "Modifier OPA" : "Nouvelle OPA";
+  document.getElementById("f-nom").value = opa ? opa.nom : "";
+  document.getElementById("f-region").value = opa ? opa.region : "";
+  document.getElementById("f-deleg").value = opa ? (opa.delegation||"") : "";
+  document.getElementById("f-type").value = opa ? (opa.type||"") : "";
+  document.getElementById("f-memb").value = opa ? (opa.membres||"") : "";
+  document.getElementById("f-fem").value = opa ? (opa.femmes||"") : "";
+  document.getElementById("f-lat").value = opa ? (opa.lat||"") : "";
+  document.getElementById("f-lng").value = opa ? (opa.lng||"") : "";
+  document.getElementById("f-notes").value = opa ? (opa.notes||"") : "";
+  openModal("modal-opa");
+}
+
+function saveOPA() {
+  var nom = document.getElementById("f-nom").value.trim();
+  var region = document.getElementById("f-region").value;
+  if(!nom||!region){toast("Nom et region obligatoires",true);return;}
+  var o = {id:editOpaId||String(Date.now()),nom:nom,region:region,
+    delegation:document.getElementById("f-deleg").value.trim(),
+    type:document.getElementById("f-type").value,
+    membres:parseInt(document.getElementById("f-memb").value)||0,
+    femmes:parseInt(document.getElementById("f-fem").value)||0,
+    lat:parseFloat(document.getElementById("f-lat").value)||null,
+    lng:parseFloat(document.getElementById("f-lng").value)||null,
+    notes:document.getElementById("f-notes").value.trim()
+  };
+  if(editOpaId){opas=opas.map(function(x){return x.id===editOpaId?o:x;});toast("OPA mise a jour");}
+  else{opas.push(o);toast("OPA ajoutee");}
+  sv(); closeModal("modal-opa"); renderOpaTable("all"); renderDashboard();
+}
+
+function deleteOPA(id) {
+  if(!confirm("Supprimer cette OPA?")) return;
+  opas=opas.filter(function(o){return o.id!==id;});
+  ints=ints.filter(function(i){return i.opaId!==id;});
+  sv(); renderOpaTable("all"); renderDashboard(); toast("OPA supprimee");
+}
+
+function renderOpaTable(filter) {
+  var list = filter==="all" ? opas : opas.filter(function(o){return o.region===filter;});
+  var tb = document.getElementById("opa-tbody");
+  if(!tb) return;
+  if(!list.length){tb.innerHTML="<tr><td colspan='8'><div class='empty'>Aucune OPA — cliquez Nouvelle OPA</div></td></tr>";return;}
+  tb.innerHTML = list.map(function(o){
+    var gps = (o.lat&&o.lng) ? o.lat.toFixed(4)+", "+o.lng.toFixed(4) : "-";
+    var tc = o.region==="Jendouba"?"tag-j":"tag-k";
+    return "<tr><td><strong>"+o.nom+"</strong></td><td><span class='tag "+tc+"'>"+o.region+"</span></td><td>"+(o.delegation||"-")+"</td><td>"+(o.type||"-")+"</td><td>"+(o.membres||0)+"</td><td>"+(o.femmes?o.femmes+"%":"-")+"</td><td style='font-size:10px;font-family:monospace'>"+gps+"</td><td style='white-space:nowrap'><button class='btn btn-sm' onclick='openOpaModal(opas.find(function(x){return x.id===\""+o.id+"\";}))'>✏</button> <button class='btn btn-sm btn-r' onclick='deleteOPA(\""+o.id+"\")'>✕</button></td></tr>";
+  }).join("");
+}
+
+function openIntModal(it) {
+  editIntId = it ? it.id : null;
+  document.getElementById("int-modal-title").textContent = it ? "Modifier intervention" : "Nouvelle intervention";
+  var sel = document.getElementById("i-opa");
+  sel.innerHTML = "<option value=''>-- Choisir --</option>"+opas.map(function(o){return "<option value='"+o.id+"'>"+o.nom+" ("+o.region+")</option>";}).join("");
+  document.getElementById("i-opa").value = it ? it.opaId : "";
+  document.getElementById("i-ag").value = it ? it.agency : "";
+  document.getElementById("i-type").value = it ? it.type : "";
+  document.getElementById("i-date").value = it ? (it.date||"") : "";
+  document.getElementById("i-ben").value = it ? (it.beneficiaires||"") : "";
+  document.getElementById("i-stat").value = it ? (it.statut||"En cours") : "En cours";
+  document.getElementById("i-desc").value = it ? (it.description||"") : "";
+  openModal("modal-int");
+}
+
+function saveInt() {
+  var opaId = document.getElementById("i-opa").value;
+  var agency = document.getElementById("i-ag").value;
+  var type = document.getElementById("i-type").value;
+  if(!opaId||!agency||!type){toast("OPA, agence et type obligatoires",true);return;}
+  var opaObj = opas.find(function(o){return o.id===opaId;});
+  var it = {id:editIntId||String(Date.now()),opaId:opaId,opaName:opaObj?opaObj.nom:"",agency:agency,type:type,region:opaObj?opaObj.region:"",
+    date:document.getElementById("i-date").value,
+    beneficiaires:parseInt(document.getElementById("i-ben").value)||0,
+    statut:document.getElementById("i-stat").value,
+    description:document.getElementById("i-desc").value.trim()
+  };
+  if(editIntId){ints=ints.map(function(x){return x.id===editIntId?it:x;});toast("Intervention mise a jour");}
+  else{ints.push(it);toast("Intervention ajoutee");}
+  sv(); closeModal("modal-int"); renderIntTable(); renderDashboard();
+}
+
+function deleteInt(id) {
+  if(!confirm("Supprimer?")) return;
+  ints=ints.filter(function(i){return i.id!==id;});
+  sv(); renderIntTable(); renderDashboard(); toast("Intervention supprimee");
+}
+
+function renderIntTable() {
+  var fa = document.getElementById("int-fa"); var fr = document.getElementById("int-fr");
+  var fav = fa?fa.value:"all"; var frv = fr?fr.value:"all";
+  var list = ints.filter(function(i){return (fav==="all"||i.agency===fav)&&(frv==="all"||i.region===frv);});
+  var tb = document.getElementById("int-tbody");
+  if(!tb) return;
+  if(!list.length){tb.innerHTML="<tr><td colspan='8'><div class='empty'>Aucune intervention</div></td></tr>";return;}
+  tb.innerHTML = list.map(function(it){
+    var tc = it.region==="Jendouba"?"tag-j":"tag-k";
+    var sc = it.statut==="Terminee"?"chip-ok":(it.statut==="En cours"?"chip-wa":"chip-in");
+    var ds = it.date ? new Date(it.date+"T00:00:00").toLocaleDateString("fr-FR") : "-";
+    return "<tr><td><strong>"+(it.opaName||"-")+"</strong></td><td><span class='tag "+tc+"'>"+(it.region||"-")+"</span></td><td><strong>"+it.agency+"</strong></td><td>"+it.type+"</td><td>"+ds+"</td><td>"+(it.beneficiaires||0)+"</td><td><span class='chip "+sc+"'>"+(it.statut||"")+"</span></td><td style='white-space:nowrap'><button class='btn btn-sm' onclick='openIntModal(ints.find(function(x){return x.id===\""+it.id+"\";}))'>✏</button> <button class='btn btn-sm btn-r' onclick='deleteInt(\""+it.id+"\")'>✕</button></td></tr>";
+  }).join("");
+}
+
+function barChart(data, colors) {
+  var max = Math.max.apply(null, data.map(function(d){return d.v;})); if(max===0) max=1;
+  return "<div class='chart-bars'>"+data.map(function(d,i){
+    var pct = Math.round(d.v/max*100);
+    return "<div class='chart-bar-wrap'><div class='chart-bar-val'>"+d.v+"</div><div class='chart-bar-track'><div class='chart-bar-fill' style='height:"+pct+"%;background:"+colors[i%colors.length]+"'></div></div><div class='chart-bar-lbl'>"+d.l+"</div></div>";
+  }).join("")+"</div>";
+}
+
+function donutChart(data, colors) {
+  var total = data.reduce(function(s,d){return s+d.v;},0);
+  if(!total) return "<div class='empty'>Aucune donnee</div>";
+  var r=50, cx=60, cy=60, circ=2*Math.PI*r;
+  var offset=0;
+  var slices = data.map(function(d,i){
+    var pct=d.v/total; var dash=pct*circ;
+    var sl={dash:dash,offset:circ-offset,color:colors[i],label:d.l,value:d.v};
+    offset+=dash; return sl;
+  });
+  var svg = "<svg width='120' height='120' viewBox='0 0 120 120'><circle cx='"+cx+"' cy='"+cy+"' r='"+r+"' fill='none' stroke='#f0f4f0' stroke-width='18'/>"+
+    slices.map(function(s){return "<circle cx='"+cx+"' cy='"+cy+"' r='"+r+"' fill='none' stroke='"+s.color+"' stroke-width='18' stroke-dasharray='"+s.dash+" "+(circ-s.dash)+"' stroke-dashoffset='"+s.offset+"' style='transform:rotate(-90deg);transform-origin:50% 50%'/>";}).join("")+
+    "<text x='"+cx+"' y='"+(cy-4)+"' text-anchor='middle' font-size='14' font-weight='500' fill='var(--color-text-primary)'>"+total+"</text><text x='"+cx+"' y='"+(cy+10)+"' text-anchor='middle' font-size='9' fill='var(--color-text-secondary)'>Total</text></svg>";
+  var legend = "<div class='donut-legend'>"+data.map(function(d,i){return "<div class='donut-leg-item'><div class='donut-dot' style='background:"+colors[i]+"'></div><span style='color:var(--color-text-secondary)'>"+d.l+"</span><span style='margin-left:auto;font-weight:500;color:"+colors[i]+"'>"+d.v+"</span></div>";}).join("")+"</div>";
+  return "<div class='donut-wrap'>"+svg+legend+"</div>";
+}
+
+function renderDashboard() {
+  var ko=document.getElementById("kpi-opa"); if(ko) ko.textContent=opas.length;
+  var ki=document.getElementById("kpi-int"); if(ki) ki.textContent=ints.length;
+  var kb=document.getElementById("kpi-ben"); if(kb) kb.textContent=ints.reduce(function(s,i){return s+(i.beneficiaires||0);},0).toLocaleString("fr");
+  var cr=document.getElementById("chart-region");
+  if(cr) cr.innerHTML=donutChart([{l:"Jendouba",v:opas.filter(function(o){return o.region==="Jendouba";}).length},{l:"Kairouan",v:opas.filter(function(o){return o.region==="Kairouan";}).length}],["#1565c0","#e55b13"]);
+  var ca=document.getElementById("chart-agency");
+  if(ca) ca.innerHTML=barChart(["FAO","IFAD","UN Women","WFP"].map(function(a){return {l:a,v:ints.filter(function(i){return i.agency===a;}).length};}),["#1565c0","#2e8b3a","#880e4f","#e65100"]);
+  var tb=document.getElementById("recent-tbody");
+  if(tb){
+    var recent=[].concat(opas).slice(-5).reverse();
+    if(!recent.length){tb.innerHTML="<tr><td colspan='5'><div class='empty'>Aucune OPA enregistree</div></td></tr>";}
+    else tb.innerHTML=recent.map(function(o){var ic=ints.filter(function(i){return i.opaId===o.id;}).length;var b=ints.filter(function(i){return i.opaId===o.id;}).reduce(function(s,i){return s+(i.beneficiaires||0);},0);var tc=o.region==="Jendouba"?"tag-j":"tag-k";return "<tr><td><strong>"+o.nom+"</strong></td><td><span class='tag "+tc+"'>"+o.region+"</span></td><td>"+(o.delegation||"-")+"</td><td>"+ic+"</td><td>"+b+"</td></tr>";}).join("");
+  }
+}
+
+function renderMap(filter) {
+  var list = filter==="all" ? opas : opas.filter(function(o){return o.region===filter;});
+  var withGPS = list.filter(function(o){return o.lat&&o.lng;});
+  var toX=function(lng){return ((lng-7)/5)*320+40;};
+  var toY=function(lat){return ((38-lat)/8)*230+20;};
+  var pins = withGPS.map(function(o){
+    var x=toX(o.lng); var y=toY(o.lat);
+    var color=o.region==="Jendouba"?"#1565c0":"#e55b13";
+    var ic=ints.filter(function(i){return i.opaId===o.id;}).length;
+    return "<circle cx='"+x+"' cy='"+y+"' r='7' fill='"+color+"' stroke='#fff' stroke-width='2'><title>"+o.nom+" — "+ic+" intervention(s)</title></circle>"+(ic>0?"<text x='"+x+"' y='"+(y+4)+"' text-anchor='middle' font-size='7' fill='#fff' font-weight='500'>"+ic+"</text>":"");
+  }).join("");
+  var empty = withGPS.length===0 ? "<text x='200' y='140' text-anchor='middle' font-size='11' fill='#888'>Ajoutez des coordonnees GPS pour localiser les OPA</text>" : "";
+  var mc = document.getElementById("map-container");
+  if(mc) mc.innerHTML = "<svg class='map-svg' viewBox='0 0 400 280'><path d='M170,15 L215,22 L235,38 L248,58 L242,80 L258,102 L263,132 L252,162 L238,192 L218,222 L198,258 L184,270 L168,258 L152,226 L142,196 L138,166 L143,136 L154,106 L159,76 L163,46 Z' fill='#c8e6c9' stroke='#2e8b3a' stroke-width='1.2' opacity='0.7'/><text x='168' y='80' font-size='9' fill='#1a5c24' font-weight='500'>Jendouba</text><text x='170' y='155' font-size='9' fill='#e55b13' font-weight='500'>Kairouan</text>"+pins+empty+"</svg><div style='display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--color-text-secondary)'><span style='color:#1565c0'>● Jendouba</span><span style='color:#e55b13'>● Kairouan</span><span style='margin-left:auto'>"+withGPS.length+" OPA localisee(s) / "+list.length+"</span></div>";
+}
+
+function renderAgencies() {
+  var AGs=[{name:"FAO",color:"#0d47a1",bg:"#e3f2fd",icon:"🌾"},{name:"IFAD",color:"#1b5e20",bg:"#e8f5e9",icon:"🏡"},{name:"UN Women",color:"#880e4f",bg:"#fce4ec",icon:"♀"},{name:"WFP",color:"#e65100",bg:"#fff8e1",icon:"🍽"}];
+  var grid=document.getElementById("agencies-grid");
+  if(!grid) return;
+  grid.innerHTML=AGs.map(function(ag){
+    var ai=ints.filter(function(i){return i.agency===ag.name;});
+    var ben=ai.reduce(function(s,i){return s+(i.beneficiaires||0);},0);
+    var jI=ai.filter(function(i){return i.region==="Jendouba";}).length;
+    var kI=ai.filter(function(i){return i.region==="Kairouan";}).length;
+    var opaC=Object.keys(ai.reduce(function(acc,i){acc[i.opaId]=1;return acc;},{})).length;
+    return "<div class='ag-card'><div class='ag-head' style='background:"+ag.bg+"'><div class='ag-icon' style='background:rgba(255,255,255,0.8)'>"+ag.icon+"</div><div><div style='font-weight:500;color:"+ag.color+";font-size:13px'>"+ag.name+"</div><div style='font-size:10px;color:var(--color-text-secondary)'>"+ai.length+" intervention(s)</div></div></div><div class='ag-body'><div class='ag-stats'><div class='ag-stat'><div class='ag-stat-val' style='color:"+ag.color+"'>"+ai.length+"</div><div class='ag-stat-lbl'>Interventions</div></div><div class='ag-stat'><div class='ag-stat-val' style='color:"+ag.color+"'>"+ben+"</div><div class='ag-stat-lbl'>Beneficiaires</div></div></div><div style='display:flex;gap:4px;flex-wrap:wrap'><span class='chip chip-in'>Jendouba: "+jI+"</span><span class='chip chip-wa'>Kairouan: "+kI+"</span><span class='chip chip-ok'>"+opaC+" OPA</span></div></div></div>";
+  }).join("");
+}
+
+function renderStats() {
+  var types={};
+  ints.forEach(function(i){types[i.type]=(types[i.type]||0)+1;});
+  var tData=Object.keys(types).map(function(k){return {l:k,v:types[k]};});
+  var ct=document.getElementById("chart-types");
+  if(ct) ct.innerHTML = tData.length ? barChart(tData,["#1565c0","#2e8b3a","#880e4f","#e65100","#6a1b9a","#00838f","#f57c00","#4e342e"]) : "<div class='empty'>Aucune donnee</div>";
+  var jB=ints.filter(function(i){return i.region==="Jendouba";}).reduce(function(s,i){return s+(i.beneficiaires||0);},0);
+  var kB=ints.filter(function(i){return i.region==="Kairouan";}).reduce(function(s,i){return s+(i.beneficiaires||0);},0);
+  var cb=document.getElementById("chart-ben-region");
+  if(cb) cb.innerHTML = barChart([{l:"Jendouba",v:jB},{l:"Kairouan",v:kB}],["#1565c0","#e55b13"]);
+  var bars=document.getElementById("opa-bars");
+  if(!bars) return;
+  if(!opas.length){bars.innerHTML="<div class='empty'>Aucune OPA</div>";return;}
+  var maxB=Math.max.apply(null,opas.map(function(o){return ints.filter(function(i){return i.opaId===o.id;}).reduce(function(s,i){return s+(i.beneficiaires||0);},0);}));
+  if(!maxB) maxB=1;
+  bars.innerHTML=opas.map(function(o){
+    var b=ints.filter(function(i){return i.opaId===o.id;}).reduce(function(s,i){return s+(i.beneficiaires||0);},0);
+    var pct=Math.round(b/maxB*100);
+    var tc=o.region==="Jendouba"?"tag-j":"tag-k";
+    var bc=o.region==="Kairouan"?"#e55b13":"#2e8b3a";
+    return "<div style='margin-bottom:10px'><div style='display:flex;justify-content:space-between;margin-bottom:3px;font-size:11px'><span><strong>"+o.nom+"</strong> <span class='tag "+tc+"' style='font-size:9px'>"+o.region+"</span></span><span style='color:var(--color-text-secondary)'>"+b+"</span></div><div class='progress'><div class='progress-bar' style='width:"+pct+"%;background:"+bc+"'></div></div></div>";
+  }).join("");
+}
+
+function toast(msg, err) {
+  var t=document.getElementById("toast"); if(!t) return;
+  t.textContent=msg; t.className="toast"+(err?" err":""); t.style.display="block";
+  setTimeout(function(){t.style.display="none";},3000);
+}
+
+renderDashboard();
+renderOpaTable("all");
+renderIntTable();
+renderAgencies();
+renderStats();
+</script>
