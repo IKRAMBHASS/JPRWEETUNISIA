@@ -144,9 +144,14 @@ function syncBar(msg,state){
   b.className=state==="loading"?"loading":state==="err"?"err":"";
 }
 
-var GH_TOKEN="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";
+var GH_TOKEN="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";
 var GH_REPO="ikrambhass/JPRWEETUNISIA";
 var GH_FILE="data.json";
+function toast(msg,err){
+  var t=document.getElementById("toast");if(!t)return;
+  t.textContent=msg;t.className=err?"err":"";t.style.display="block";
+  setTimeout(function(){t.style.display="none";},3000);
+}
 function saveData(callback){
   var payload=JSON.stringify({opas:O,interventions:I},null,2);
   var b64=btoa(unescape(encodeURIComponent(payload)));
